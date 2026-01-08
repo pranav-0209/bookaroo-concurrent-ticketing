@@ -21,7 +21,7 @@ public class EventService {
     }
 
     @Transactional
-    public Event createEvent(Event e){
+    public Event createEvent(Event e) {
         Event SavedEvent = eventRepository.save(e);
 
         TicketInventory ticketInventory = new TicketInventory();
@@ -33,11 +33,11 @@ public class EventService {
         return SavedEvent;
     }
 
-    public Event getEventById(Long eventId){
+    public Event getEventById(Long eventId) {
         return eventRepository.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
     }
 
-    public List<Event> getAllEvents(){
+    public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
 
