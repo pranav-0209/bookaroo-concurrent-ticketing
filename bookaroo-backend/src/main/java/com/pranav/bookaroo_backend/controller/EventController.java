@@ -36,4 +36,10 @@ public class EventController {
         List<Event> events = eventService.getAllEvents();
         return ResponseEntity.ok(events);
     }
+
+    @GetMapping("/{eventId}/availability")
+    public ResponseEntity<Integer> getAvailableTickets(@PathVariable Long eventId) {
+        int availableTickets = eventService.getAvailableTickets(eventId);
+        return ResponseEntity.ok(availableTickets);
+    }
 }

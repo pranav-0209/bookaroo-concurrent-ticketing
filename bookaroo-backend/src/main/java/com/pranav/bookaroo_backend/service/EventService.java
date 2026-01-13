@@ -41,4 +41,10 @@ public class EventService {
         return eventRepository.findAll();
     }
 
+    public int getAvailableTickets(Long eventId) {
+        TicketInventory inventory = ticketInventoryRepository.findByEventId(eventId).
+                orElseThrow(() -> new IllegalArgumentException("Inventory not found"));
+        return inventory.getAvailableTickets();
+    }
+
 }
