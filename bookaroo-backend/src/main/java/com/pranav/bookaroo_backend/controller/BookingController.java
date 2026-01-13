@@ -1,5 +1,6 @@
 package com.pranav.bookaroo_backend.controller;
 
+import com.pranav.bookaroo_backend.dto.BookingRequest;
 import com.pranav.bookaroo_backend.model.Booking;
 import com.pranav.bookaroo_backend.service.BookingService;
 import org.springframework.http.HttpStatus;
@@ -19,13 +20,13 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<Booking> bookTickets(
-            @RequestParam Long eventId,
-            @RequestParam int quantity,
-            @RequestParam String userEmail) {
-
-        Booking booking = bookingService.bookTickets(eventId, quantity, userEmail);
-        return new ResponseEntity<>(booking, HttpStatus.CREATED);
+    public ResponseEntity<Booking> bookTickets(@RequestBody BookingRequest request){
+            Booking booking = bookingService.bookTickets(
+                    request.getEventId(),
+                    request.getQuantity(),
+                    request.getUserEmail()
+            );
+            return new ResponseEntity<>(booking, HttpStatus.CREATED);
     }
 
     @GetMapping("/event/{eventId}")
