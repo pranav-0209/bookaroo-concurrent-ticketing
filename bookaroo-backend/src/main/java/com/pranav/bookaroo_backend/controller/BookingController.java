@@ -3,6 +3,7 @@ package com.pranav.bookaroo_backend.controller;
 import com.pranav.bookaroo_backend.dto.BookingRequest;
 import com.pranav.bookaroo_backend.model.Booking;
 import com.pranav.bookaroo_backend.service.BookingService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<Booking> bookTickets(@RequestBody BookingRequest request){
+    public ResponseEntity<Booking> bookTickets(@Valid @RequestBody BookingRequest request){
             Booking booking = bookingService.bookTickets(
                     request.getEventId(),
                     request.getQuantity(),

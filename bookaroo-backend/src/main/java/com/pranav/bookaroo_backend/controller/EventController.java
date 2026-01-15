@@ -1,8 +1,10 @@
 package com.pranav.bookaroo_backend.controller;
 
+import com.pranav.bookaroo_backend.dto.CreateEventRequest;
 import com.pranav.bookaroo_backend.model.Event;
 import com.pranav.bookaroo_backend.service.BookingService;
 import com.pranav.bookaroo_backend.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +22,13 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+    public ResponseEntity<Event> createEvent(@Valid @RequestBody CreateEventRequest request) {
+        Event event = new Event();
+        event.setName(request.getName());
+        event.setVenue(request.getVenue());
+        event.setTotalTickets(request.getTotalTickets());
+        event.setEventDateTime(request.getEventDateTime());
+
         Event createdEvent = eventService.createEvent(event);
         return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
     }
