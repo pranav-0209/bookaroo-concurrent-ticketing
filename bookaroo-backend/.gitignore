@@ -33,3 +33,10 @@ build/
 .vscode/
 
 src/main/resources/application.properties
+
+
+logs/
+bookaroo.log
+app.log
+error.log
+*.log

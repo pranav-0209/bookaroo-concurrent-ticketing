@@ -2,7 +2,6 @@ package com.pranav.bookaroo_backend.controller;
 
 import com.pranav.bookaroo_backend.dto.CreateEventRequest;
 import com.pranav.bookaroo_backend.model.Event;
-import com.pranav.bookaroo_backend.service.BookingService;
 import com.pranav.bookaroo_backend.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,7 +16,7 @@ public class EventController {
 
     private final EventService eventService;
 
-    public EventController(EventService eventService, BookingService bookingService) {
+    public EventController(EventService eventService) {
         this.eventService = eventService;
     }
 

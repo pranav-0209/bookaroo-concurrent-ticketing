@@ -8,6 +8,8 @@ import com.pranav.bookaroo_backend.repository.BookingRepository;
 import com.pranav.bookaroo_backend.repository.EventRepository;
 import com.pranav.bookaroo_backend.repository.TicketInventoryRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,8 @@ import java.util.List;
 
 @Service
 public class BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
     private final BookingRepository bookingRepository;
     private final EventRepository eventRepository;
@@ -30,16 +34,24 @@ public class BookingService {
     @Transactional
     public Booking bookTickets(Long eventId, int quantity, String userEmail) {
 
+        log.info("Booking attempt: eventId={}, qty={}, user={}", eventId, quantity, userEmail);
+
         Event event = eventRepository.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
 
         try {
             TicketInventory inventory = ticketInventoryRepository.findById(eventId)
                     .orElseThrow(() -> new IllegalStateException("Inventory not initialized"));
+            log.debug("Inventory before update: available={}", inventory.getAvailableTickets());
 
             if (inventory.getAvailableTickets() < quantity) {
+                log.warn("Booking Failed (Not Available): eventId={}, requested={}", eventId, quantity);
                 throw new IllegalStateException("Not enough tickets available");
             }
 
+            log.debug("Updating inventory: eventId={}, from {} to {}",
+                    eventId,
+                    inventory.getAvailableTickets(),
+                    inventory.getAvailableTickets() - quantity);
             inventory.setAvailableTickets(inventory.getAvailableTickets() - quantity);
 
             ticketInventoryRepository.save(inventory);
@@ -50,7 +62,10 @@ public class BookingService {
             booking.setQuantity(quantity);
             booking.setStatue(BookingStatus.CONFIRMED);
             booking.setCreatedAt(LocalDateTime.now());
-            return bookingRepository.save(booking);
+            Booking savedBooking = bookingRepository.save(booking);
+            log.info("Booking Success: eventId={}, user={}, quantity={}", eventId, userEmail, quantity);
+            return savedBooking;
+
         } catch (OptimisticLockingFailureException ex) {
             throw new IllegalStateException("Tickets are no longer available. Please retry.");
         }
