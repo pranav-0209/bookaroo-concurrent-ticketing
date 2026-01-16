@@ -34,41 +34,51 @@ public class BookingService {
     @Transactional
     public Booking bookTickets(Long eventId, int quantity, String userEmail) {
 
-        log.info("Booking attempt: eventId={}, qty={}, user={}", eventId, quantity, userEmail);
+        int maxRetries = 3;
+        int attempt = 0;
 
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
+        while (attempt < maxRetries) {
+            try {
+                attempt++;
+                log.info("Booking attempt: eventId={}, qty={}, user={}", eventId, quantity, userEmail);
 
-        try {
-            TicketInventory inventory = ticketInventoryRepository.findById(eventId)
-                    .orElseThrow(() -> new IllegalStateException("Inventory not initialized"));
-            log.debug("Inventory before update: available={}", inventory.getAvailableTickets());
+                Event event = eventRepository.findById(eventId)
+                        .orElseThrow(() -> new IllegalArgumentException("Event not found"));
 
-            if (inventory.getAvailableTickets() < quantity) {
-                log.warn("Booking Failed (Not Available): eventId={}, requested={}", eventId, quantity);
-                throw new IllegalStateException("Not enough tickets available");
+                TicketInventory inventory = ticketInventoryRepository.findByEventId(eventId)
+                        .orElseThrow(() -> new IllegalStateException("Inventory not initialized"));
+                log.debug("Inventory before update: available={}", inventory.getAvailableTickets());
+
+                if (inventory.getAvailableTickets() < quantity) {
+                    log.warn("Booking Failed (Tickets Not Available): eventId={}, requested={}", eventId, quantity);
+                    throw new IllegalStateException("Not enough tickets available");
+                }
+
+                log.debug("Updating inventory: eventId={}, from {} to {}",
+                        eventId,
+                        inventory.getAvailableTickets(),
+                        inventory.getAvailableTickets() - quantity);
+                inventory.setAvailableTickets(inventory.getAvailableTickets() - quantity);
+
+                ticketInventoryRepository.save(inventory);
+                Booking booking = new Booking();
+                booking.setEvent(event);
+                booking.setUserEmail(userEmail);
+                booking.setQuantity(quantity);
+                booking.setStatus(BookingStatus.CONFIRMED);
+                booking.setCreatedAt(LocalDateTime.now());
+                Booking savedBooking = bookingRepository.save(booking);
+                log.info("Booking Success: eventId={}, user={}, quantity={}", eventId, userEmail, quantity);
+                return savedBooking;
+            } catch (OptimisticLockingFailureException ex) {
+                log.warn("Version conflict on attempt {} for eventId={}", attempt, eventId);
+
+                if (attempt > maxRetries) {
+                    throw new IllegalStateException("High Demand. Please try again in a moment");
+                }
             }
-
-            log.debug("Updating inventory: eventId={}, from {} to {}",
-                    eventId,
-                    inventory.getAvailableTickets(),
-                    inventory.getAvailableTickets() - quantity);
-            inventory.setAvailableTickets(inventory.getAvailableTickets() - quantity);
-
-            ticketInventoryRepository.save(inventory);
-
-            Booking booking = new Booking();
-            booking.setEvent(event);
-            booking.setUserEmail(userEmail);
-            booking.setQuantity(quantity);
-            booking.setStatue(BookingStatus.CONFIRMED);
-            booking.setCreatedAt(LocalDateTime.now());
-            Booking savedBooking = bookingRepository.save(booking);
-            log.info("Booking Success: eventId={}, user={}, quantity={}", eventId, userEmail, quantity);
-            return savedBooking;
-
-        } catch (OptimisticLockingFailureException ex) {
-            throw new IllegalStateException("Tickets are no longer available. Please retry.");
         }
+        throw new IllegalStateException("Booking failed after retries");
     }
 
     public List<Booking> getBookingsByEvent(Long eventId) {

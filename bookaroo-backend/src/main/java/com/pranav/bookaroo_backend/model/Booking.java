@@ -32,7 +32,7 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BookingStatus statue;
+    private BookingStatus status;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
