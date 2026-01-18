@@ -73,7 +73,7 @@ public class BookingService {
             } catch (OptimisticLockingFailureException ex) {
                 log.warn("Version conflict on attempt {} for eventId={}", attempt, eventId);
 
-                if (attempt > maxRetries) {
+                if (attempt == maxRetries) {
                     throw new IllegalStateException("High Demand. Please try again in a moment");
                 }
             }
